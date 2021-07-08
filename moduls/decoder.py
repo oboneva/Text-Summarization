@@ -14,8 +14,8 @@ class DecoderLSTM(nn.Module):
         self.embedding = nn.Embedding(
             num_embeddings=self.vocab_size, embedding_dim=self.embed_size)
 
-        self.lstm = nn.LSTMCell(input_size=embed_size,
-                                hidden_size=hidden_size)
+        self.lstm_cell = nn.LSTMCell(input_size=embed_size,
+                                     hidden_size=hidden_size)
 
         self.fc = nn.Linear(in_features=self.hidden_size,
                             out_features=self.vocab_size)
@@ -29,20 +29,14 @@ class DecoderLSTM(nn.Module):
             summary[i][summary_len[i] - 1] = 0
 
         summary = summary[:, :-1]
+        seq_len -= 1
 
         # embed summaries from [batch_size, seq_len] to [batch_size, seq_len, embedding_dim]
         # ex: [8, 16] -> [8, 16, 500]
         summary = self.embedding(summary)
 
+        # init initial hidden and cell state with the last hidden and cell state of the encoder ([fwd, bwd] since it is bidirectional)
         hidden_state_t, cell_state_t = encoded_text
-        hidden_state_t = hidden_state_t.view(1, batch_size, -1)
-        cell_state_t = cell_state_t.view(1, batch_size, -1)
-
-        # output: torch.Size([8, 74, 512])
-        # output, (hidden_state_t, cell_state_t) = self.lstm(
-        #     summary, (hidden_state_t, cell_state_t))
-
-        # output = self.fc(output)
 
         # output container
         # ex: [8, 16, 10 000
@@ -50,9 +44,10 @@ class DecoderLSTM(nn.Module):
             self.device)
 
         for t in range(seq_len):
-            output, (hidden_state_t, cell_state_t) = self.lstm(
+            hidden_state_t, cell_state_t = self.lstm_cell(
                 summary[:, t], (hidden_state_t, cell_state_t))
-            output = self.fc(output)
+
+            output = self.fc(hidden_state_t)
 
             outputs_container[:, t] = output
 
