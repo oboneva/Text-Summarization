@@ -59,10 +59,24 @@ class DecoderLSTM(nn.Module):
 
         return outputs_container
 
-    def summarize(self, encoded_text, vocab, batch_size, max_len=75):
-        hidden_state_t, cell_state_t = encoded_text
-        hidden_state_t = hidden_state_t.view(1, batch_size, -1)
-        cell_state_t = cell_state_t.view(1, batch_size, -1)
+    def summarize(self, encoder_outputs, encoded_text, vocab, max_len=75):
+        batch_size, _, _ = encoder_outputs.size()
+
+        hidden_state_n, cell_state_n = encoded_text
+        hidden_state_n = hidden_state_n.view(2, 2, batch_size, -1)
+        cell_state_n = cell_state_n.view(2, 2, batch_size, -1)
+
+        last_hidden = hidden_state_n[-1]
+        last_cell = cell_state_n[-1]
+
+        last_hidden_fwd = last_hidden[0]
+        last_hidden_bwd = last_hidden[1]
+
+        last_cell_fwd = last_cell[0]
+        last_cell_bwd = last_cell[1]
+
+        hidden_state_n = torch.cat((last_hidden_fwd, last_hidden_bwd), 1)
+        cell_state_n = torch.cat((last_cell_fwd, last_cell_bwd), 1)
 
         sos = torch.tensor(vocab.stoi['<sos>']).view(1, -1).to(self.device)
         embed = self.embedding(sos)
@@ -70,10 +84,13 @@ class DecoderLSTM(nn.Module):
         summaries = []
 
         for t in range(max_len):
-            hidden_state_t, cell_state_t = self.lstm(
-                embed, (hidden_state_t, cell_state_t))
+            _, context = self.attention(encoder_outputs, hidden_state_n)
+            lstm_input = torch.cat((embed[:, 0], context), dim=1)
 
-            output = self.fc(hidden_state_t)
+            hidden_state_n, cell_state_n = self.lstm_cell(
+                lstm_input, (hidden_state_n, cell_state_n))
+
+            output = self.fc(cell_state_n)
             output = output.view(batch_size, -1)
 
             best_word_idx = output.argmax(dim=1)
