@@ -1,9 +1,10 @@
+from moduls.attention import Attention
 import torch
 from torch import nn
 
 
 class DecoderLSTM(nn.Module):
-    def __init__(self, embed_size, hidden_size, vocab_size, device):
+    def __init__(self, embed_size, hidden_size, attention_size, vocab_size, device):
         super(DecoderLSTM, self).__init__()
 
         self.device = device
@@ -14,15 +15,17 @@ class DecoderLSTM(nn.Module):
         self.embedding = nn.Embedding(
             num_embeddings=self.vocab_size, embedding_dim=self.embed_size)
 
-        self.lstm_cell = nn.LSTMCell(input_size=embed_size,
+        self.lstm_cell = nn.LSTMCell(input_size=embed_size + hidden_size,
                                      hidden_size=hidden_size)
+
+        self.attention = Attention(hidden_size, hidden_size, attention_size)
 
         self.fc = nn.Linear(in_features=self.hidden_size,
                             out_features=self.vocab_size)
 
         self.softmax = nn.Softmax(dim=1)
 
-    def forward(self, encoded_text, summary, summary_len):
+    def forward(self, encoder_outputs, encoded_text, summary, summary_len):
         batch_size, seq_len = summary.size()
         # remove <eos> from the summaries
         for i in range(len(summary_len)):
@@ -44,8 +47,11 @@ class DecoderLSTM(nn.Module):
             self.device)
 
         for t in range(seq_len):
+            _, context = self.attention(encoder_outputs, hidden_state_t)
+            lstm_input = torch.cat((summary[:, t], context), dim=1)
+
             hidden_state_t, cell_state_t = self.lstm_cell(
-                summary[:, t], (hidden_state_t, cell_state_t))
+                lstm_input, (hidden_state_t, cell_state_t))
 
             output = self.fc(hidden_state_t)
 

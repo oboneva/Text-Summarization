@@ -9,6 +9,7 @@ class data_config:
 class model_config:
     embed_size = 300
     hidden_size = 256
+    attention_size = 256
 
 
 class train_config:

@@ -16,6 +16,7 @@ class EncoderDecoder(nn.Module):
 
         self.decoder = DecoderLSTM(vocab_size=vocab_size,
                                    hidden_size=model_config.hidden_size * 2,
+                                   attention_size=model_config.attention_size,
                                    embed_size=model_config.embed_size,
                                    device=device)
 
@@ -48,7 +49,7 @@ class EncoderDecoder(nn.Module):
         new_hidden = torch.cat((last_hidden_fwd, last_hidden_bwd), 1)
         new_cell = torch.cat((last_cell_fwd, last_cell_bwd), 1)
 
-        return self.decoder((new_hidden, new_cell), summary, summary_len)
+        return self.decoder(seq_unpacked, (new_hidden, new_cell), summary, summary_len)
 
 
 def main():
