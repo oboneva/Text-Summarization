@@ -1,7 +1,7 @@
 class data_config:
     data_dir = "./data"
     train_batch_size = 2
-    test_batch_size = 256
+    test_batch_size = 1
     val_batch_size = 256
     num_workers = 1
 

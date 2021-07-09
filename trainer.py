@@ -121,7 +121,7 @@ class Trainer:
             encoder_outputs, _, (hidden_state_n, cell_state_n) = model.encoder(
                 text[:1].to(device), text_len[:1].to(device))
             output = model.decoder.summarize(
-                encoder_outputs, (hidden_state_n, cell_state_n), vocab, 20)
+                encoder_outputs, (hidden_state_n, cell_state_n), vocab)
 
             generated = ' '.join(output)
             print("Generated: ", generated)

@@ -1,3 +1,5 @@
+from commandline import parse_args
+from evaluator import Evaluator
 from modelutils import load_checkpoint
 from trainer import Trainer
 from configs import data_config, model_config, train_config
@@ -63,7 +65,7 @@ def main():
                   last_epoch, min_val_loss, device)
 
     # # 4. Evaluate the Model.
-    # Evaluator().eval(model, test_dl, True, writer, "Test", device, vocab)
+    Evaluator().eval(model, test_dl, True, writer, "Test", device, vocab)
 
     writer.close()
 
@@ -71,16 +73,6 @@ def main():
     # TODO
 
 
-# def test():
-#     a = torch.tensor([[1, 0, 0], [4, 5, 0], [7, 8, 9]])
-#     ind = torch.tensor([1, 2, 3])
-
-#     for i in range(len(ind)):
-#         a[i][ind[i] - 1] = 0
-#     print(a)
-
-
 if __name__ == "__main__":
-    # parse_args(sys.argv[1:])
-    # test()
+    parse_args(sys.argv[1:])
     main()
