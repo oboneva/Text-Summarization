@@ -9,7 +9,7 @@ from datasets.load import load_dataset
 class CNNDailyMail(Dataset):
     def __init__(self, vocab: Vocab, type1: str):
         self.dataset = load_dataset('cnn_dailymail', '3.0.0',
-                                    split='{}[:10%]'.format(type1))
+                                    split='{}[:3%]'.format(type1))
 
         self.tokenizer = get_tokenizer("basic_english")
         self.vocab = vocab

@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.nn.modules import dropout
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
@@ -15,11 +16,14 @@ class EncoderBiLSTM(nn.Module):
         self.embedding = nn.Embedding(
             num_embeddings=self.vocab_size, embedding_dim=self.embed_size)
 
+        self.dropout = nn.Dropout(0.3)
+
         self.lstm = nn.LSTM(input_size=embed_size,
                             hidden_size=hidden_size,
                             num_layers=2,
                             bidirectional=True,
-                            batch_first=True)
+                            batch_first=True,
+                            dropout=0.3)
 
         self.fc = nn.Linear(in_features=self.hidden_size,
                             out_features=self.vocab_size)
@@ -28,6 +32,7 @@ class EncoderBiLSTM(nn.Module):
         # embed text from [batch_size, seq_len] to [batch_size, seq_len, embedding_dim]
         # ex: [8, 16] -> [8, 16, 500]
         text_embed = self.embedding(text)
+        text_embed = self.dropout(text_embed)
 
         # pack the padded, sorted and embedded text
         packed_captions = pack_padded_sequence(

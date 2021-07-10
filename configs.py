@@ -1,9 +1,9 @@
 class data_config:
     data_dir = "./data"
-    train_batch_size = 2
-    test_batch_size = 1
-    val_batch_size = 256
-    num_workers = 1
+    train_batch_size = 12
+    test_batch_size = 12
+    val_batch_size = 12
+    num_workers = 6
 
 
 class model_config:
@@ -16,5 +16,5 @@ class train_config:
     log_dir = "./runs"
     checkpoint_path = "./checkpoints"
     continue_training = False
-    checkpoint_epochs = 5
+    checkpoint_epochs = 1
     epochs = 100

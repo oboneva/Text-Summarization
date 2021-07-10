@@ -7,7 +7,7 @@ from torchtext.vocab import Vocab
 
 def main():
     train_ds, test_ds, val_ds = load_dataset('cnn_dailymail', '3.0.0', split=[
-                                             'train[:10%]', 'test[:10%]', 'validation[:10%]'])
+                                             'train[:3%]', 'test[:3%]', 'validation[:3%]'])
 
     counter = Counter()
     tokenizer = get_tokenizer("basic_english")
@@ -34,7 +34,7 @@ def main():
         counter.update(highlights)
 
     # TODO: revisit vocab, cause its size is actually ~ 200 000 tokens
-    vocab = Vocab(counter, max_size=25000, min_freq=15, specials=[
+    vocab = Vocab(counter, max_size=20000, min_freq=10, specials=[
         '<pad>', '<unk>', '<eos>', '<sos>'])
 
     torch.save(vocab, './vocab.pth')

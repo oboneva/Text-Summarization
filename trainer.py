@@ -16,7 +16,7 @@ class Trainer:
 
         self.min_val_loss = 100
         self.no_improvement_epochs = 0
-        self.patience = 10
+        self.patience = 50
 
         self.checkpoint_epochs = configs.checkpoint_epochs
 
@@ -109,28 +109,29 @@ class Trainer:
 
             # log loss
             print("MLoss/train", train_loss)
-            # print("MLoss/validation", val_loss)
+            print("MLoss/validation", val_loss)
 
             self.writer.add_scalar("MLoss/train", train_loss, epoch)
-            # self.writer.add_scalar("MLoss/validation", val_loss, epoch)
+            self.writer.add_scalar("MLoss/validation", val_loss, epoch)
             self.writer.flush()
 
             dataiter = iter(self.val_dl)
-            text, text_len, summary_padded, summary_len = next(dataiter)
+            for i in range(5):
+                text, text_len, summary_padded, summary_len = next(dataiter)
 
-            encoder_outputs, _, (hidden_state_n, cell_state_n) = model.encoder(
-                text[:1].to(device), text_len[:1].to(device))
-            output = model.decoder.summarize(
-                encoder_outputs, (hidden_state_n, cell_state_n), vocab)
+                encoder_outputs, _, (hidden_state_n, cell_state_n) = model.encoder(
+                    text[:1].to(device), text_len[:1].to(device))
+                output = model.decoder.summarize(
+                    encoder_outputs, (hidden_state_n, cell_state_n), vocab)
 
-            generated = ' '.join(output)
-            print("Generated: ", generated)
-
-            asd = [vocab.itos[num]
-                   for num in summary_padded[:1].squeeze()[:summary_len[:1]]]
-            references = ' '.join(asd)
-            print("Reference: ", references)
-
+                generated = ' '.join(output)
+                print("Generated: ", generated)
+    
+                asd = [vocab.itos[num]
+                       for num in summary_padded[:1].squeeze()[:summary_len[:1]]]
+                references = ' '.join(asd)
+                print("Reference: ", references)
+    
             model.train()
 
             # early stopping

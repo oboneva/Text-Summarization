@@ -1,3 +1,4 @@
+from torch.nn.modules import dropout
 from moduls.attention import Attention
 import torch
 from torch import nn
@@ -14,6 +15,8 @@ class DecoderLSTM(nn.Module):
 
         self.embedding = nn.Embedding(
             num_embeddings=self.vocab_size, embedding_dim=self.embed_size)
+
+        self.dropout = nn.Dropout(0.3)
 
         self.lstm_cell = nn.LSTMCell(input_size=embed_size + hidden_size,
                                      hidden_size=hidden_size)
@@ -37,6 +40,7 @@ class DecoderLSTM(nn.Module):
         # embed summaries from [batch_size, seq_len] to [batch_size, seq_len, embedding_dim]
         # ex: [8, 16] -> [8, 16, 500]
         summary = self.embedding(summary)
+        summary = self.dropout(summary)
 
         # init initial hidden and cell state with the last hidden and cell state of the encoder ([fwd, bwd] since it is bidirectional)
         hidden_state_t, cell_state_t = encoded_text
@@ -53,13 +57,16 @@ class DecoderLSTM(nn.Module):
             hidden_state_t, cell_state_t = self.lstm_cell(
                 lstm_input, (hidden_state_t, cell_state_t))
 
-            output = self.fc(hidden_state_t)
+            if (t < seq_len - 1):
+                output = self.fc(self.dropout(hidden_state_t))
+            else:
+                output = self.fc(hidden_state_t)
 
             outputs_container[:, t] = output
 
         return outputs_container
 
-    def summarize(self, encoder_outputs, encoded_text, vocab, max_len=75):
+    def summarize(self, encoder_outputs, encoded_text, vocab, max_len=50):
         batch_size, _, _ = encoder_outputs.size()
 
         hidden_state_n, cell_state_n = encoded_text

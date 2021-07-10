@@ -6,6 +6,7 @@ from configs import data_config, model_config, train_config
 import sys
 import torch
 from torch.optim.adam import Adam
+from torch.optim.rmsprop import RMSprop
 from torch.utils.tensorboard import SummaryWriter
 import torch.backends.cudnn as cudnn
 from torch.utils.data.dataloader import DataLoader
@@ -13,13 +14,16 @@ from collate import CollateText
 from dataset import CNNDailyMail
 from moduls.model import EncoderDecoder
 
+import datetime
+
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print("Using {} device".format(device))
 
     cudnn.benchmark = True
-    writer = SummaryWriter(log_dir=train_config.log_dir)
+    ct = datetime.datetime.now().timestamp()
+    writer = SummaryWriter(log_dir="{}/{}".format(train_config.log_dir, ct))
 
     # 1. Prepare the Data.
     vocab = torch.load('{}/vocab.pth'.format(data_config.data_dir))
@@ -46,7 +50,7 @@ def main():
 
     # # 3. Train the Model.
     trainer = Trainer(train_dl, val_dl, writer, train_config)
-    optimizer = Adam(model.parameters())
+    optimizer = RMSprop(model.parameters()) #Adam(model.parameters(), lr=0.001)
     last_epoch = -1
     min_val_loss = 1000
     model.to(device)
